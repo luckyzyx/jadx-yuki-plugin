@@ -1,4 +1,4 @@
-package jadx.plugins.example;
+package com.luckyzyx.jadx.plugins;
 
 import jadx.api.JadxArgs;
 import jadx.api.JadxDecompiler;
