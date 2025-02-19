@@ -19,9 +19,6 @@ val isDev = false
 version = "1.0.0" + if (isDev) "-dev" else ""
 
 tasks {
-	withType(Test::class) {
-		useJUnitPlatform()
-	}
 	val shadowJar = withType(ShadowJar::class) {
 		archiveClassifier.set("") // remove '-all' suffix
 	}
@@ -46,13 +43,6 @@ dependencies {
 		isChanging = isJadxSnapshot
 	}
 
-	testImplementation("io.github.skylot:jadx-smali-input:$jadxVersion") {
-		isChanging = isJadxSnapshot
-	}
-	testImplementation("ch.qos.logback:logback-classic:1.5.9")
-	testImplementation("org.assertj:assertj-core:3.26.3")
-	testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
-	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.2")
 	implementation(kotlin("stdlib-jdk8"))
 }
 
