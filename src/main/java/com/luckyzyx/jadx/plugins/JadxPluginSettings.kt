@@ -1,20 +1,15 @@
-package com.luckyzyx.jadx.plugins;
+package com.luckyzyx.jadx.plugins
 
-import jadx.api.plugins.options.impl.BasePluginOptionsBuilder;
+import jadx.api.plugins.options.impl.BasePluginOptionsBuilder
 
-public class JadxPluginOptions extends BasePluginOptionsBuilder {
+class JadxPluginSettings : BasePluginOptionsBuilder() {
 
-	private boolean enable;
+	var isEnable: Boolean = false
 
-	@Override
-	public void registerOptions() {
+	override fun registerOptions() {
 		boolOption(JadxPluginInfo.PLUGIN_ID + ".enable")
-				.description("启用插件")
-				.defaultValue(true)
-				.setter(v -> enable = v);
-	}
-
-	public boolean isEnable() {
-		return enable;
+			.description("启用插件")
+			.defaultValue(true)
+			.setter { v: Boolean -> isEnable = v }
 	}
 }

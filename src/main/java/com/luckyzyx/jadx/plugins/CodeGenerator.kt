@@ -1,26 +1,132 @@
-package com.luckyzyx.jadx.plugins;
+package com.luckyzyx.jadx.plugins
 
-import jadx.api.JadxDecompiler;
-import jadx.api.metadata.ICodeNodeRef;
-import jadx.api.plugins.gui.JadxGuiContext;
+import jadx.api.*
+import jadx.api.metadata.ICodeNodeRef
+import jadx.api.plugins.gui.JadxGuiContext
+import jadx.core.dex.instructions.args.ArgType
+import jadx.core.dex.instructions.args.PrimitiveType
+import jadx.core.utils.exceptions.JadxRuntimeException
+import java.util.function.Consumer
 
-import java.util.function.Consumer;
+class CodeGenerator(private val guiContext: JadxGuiContext, private val decompiler: JadxDecompiler) :
+	Consumer<ICodeNodeRef?> {
 
-public class CodeGenerator implements Consumer<ICodeNodeRef> {
-
-	private final JadxGuiContext guiContext;
-	private final JadxDecompiler decompiler;
-	private final JadxPluginOptions options;
-
-	public CodeGenerator(JadxGuiContext guiContext, JadxDecompiler decompiler, JadxPluginOptions options) {
-		this.guiContext = guiContext;
-		this.decompiler = decompiler;
-		this.options = options;
+	override fun accept(iCodeNodeRef: ICodeNodeRef?) {
+		val node = decompiler.getJavaNodeByRef(iCodeNodeRef)
+		val code = generateXposedSnippet(node)
+		guiContext.copyToClipboard(code)
 	}
 
-	@Override
-	public void accept(ICodeNodeRef iCodeNodeRef) {
-
+	private fun generateXposedSnippet(node: JavaNode?): String {
+		if (node is JavaClass) {
+			return generateClassSnippet(node)
+		}
+		if (node is JavaMethod) {
+			return generateMethodSnippet(node)
+		}
+		if (node is JavaField) {
+			return generateFieldSnippet(node)
+		}
+		throw JadxRuntimeException("Unsupported node : " + (node?.javaClass))
 	}
 
+	private fun generateClassSnippet(node: JavaClass): String {
+		val clsName = node.name
+		val rawClassName = node.rawName
+
+		val code = """
+			val %sClazz = "%s".toClass().apply {
+
+			}
+		""".trimIndent()
+		return String.format(code, clsName, rawClassName)
+	}
+
+	private fun generateMethodSnippet(node: JavaMethod): String {
+		val rawClassName = node.declaringClass.rawName
+		val methodNode = node.methodNode
+		val methodName = methodNode.name
+		val args = methodNode.argTypes.map(::fixTypeContent)
+		val returnType = fixTypeContent(methodNode.returnType)
+
+		return if (methodNode.isConstructor) {
+			val code = """
+				"%s".toClass().apply {
+					constructor {
+						param(%s)
+					}.hook {
+
+					}
+				}
+		""".trimIndent()
+			String.format(code, rawClassName, args.joinToString(", "))
+		} else if (args.isEmpty()) {
+			val code = """
+				"%s".toClass().apply {
+					method {
+						name = "%s"
+						emptyParam()
+						returnType = %s
+					}.hook {
+
+					}
+				}
+		""".trimIndent()
+			String.format(code, rawClassName, methodName, returnType)
+		} else {
+			val code = """
+				"%s".toClass().apply {
+					method {
+						name = "%s"
+						param(%s)
+						returnType = %s
+					}.hook {
+
+					}
+				}
+		""".trimIndent()
+			String.format(code, rawClassName, methodName, args.joinToString(", "), returnType)
+		}
+	}
+
+	private fun generateFieldSnippet(node: JavaField): String {
+		val rawClassName = node.declaringClass.rawName
+		val fieldNode = node.fieldNode
+		val fieldName = fieldNode.name
+		val static = if (node.accessFlags.isStatic) "" else "this"
+		val type = fixTypeContent(node.fieldNode.type)
+
+		val code = """
+			"%s".toClass().apply {
+				field {
+					name = "%s"
+					type = %s
+				}.get(%s)
+			}
+		""".trimIndent()
+		return String.format(code, rawClassName, fieldName, type, static)
+	}
+
+	private fun fixTypeContent(type: ArgType): String {
+		return when {
+			type.isGeneric -> "\"${type.`object`}\""
+			type.isGenericType && type.isObject && type.isTypeKnown -> "AnyClass"
+			type.isPrimitive -> when (type.primitiveType) {
+				PrimitiveType.BOOLEAN -> "BooleanType"
+				PrimitiveType.CHAR -> "CharType"
+				PrimitiveType.BYTE -> "ByteType"
+				PrimitiveType.SHORT -> "ShortType"
+				PrimitiveType.INT -> "IntType"
+				PrimitiveType.FLOAT -> "FloatType"
+				PrimitiveType.LONG -> "LongType"
+				PrimitiveType.DOUBLE -> "DoubleType"
+				PrimitiveType.OBJECT -> "AnyClass"
+				PrimitiveType.ARRAY -> "AnyClass"
+				PrimitiveType.VOID -> "UnitType"
+				else -> throw JadxRuntimeException("Unknown or null primitive type: $type")
+			}
+
+			else -> "\"$type\""
+		}
+	}
 }

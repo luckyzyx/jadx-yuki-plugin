@@ -2,6 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
 	`java-library`
+	kotlin("jvm")
 
 	id("com.github.johnrengelman.shadow") version "8.1.1"
 
@@ -10,12 +11,12 @@ plugins {
 	id("com.github.ben-manes.versions") version "0.51.0"
 }
 
-java {
-	sourceCompatibility = JavaVersion.VERSION_11
-	targetCompatibility = JavaVersion.VERSION_11
+kotlin {
+	jvmToolchain(11)
 }
 
-version = System.getenv("VERSION") ?: "dev"
+val isDev = false
+version = "1.0.0" + if (isDev) "-dev" else ""
 
 tasks {
 	withType(Test::class) {
@@ -52,6 +53,7 @@ dependencies {
 	testImplementation("org.assertj:assertj-core:3.26.3")
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.2")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.2")
+	implementation(kotlin("stdlib-jdk8"))
 }
 
 repositories {
@@ -65,3 +67,4 @@ repositories {
 	maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
 	google()
 }
+

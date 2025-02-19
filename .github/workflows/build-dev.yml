@@ -1,4 +1,4 @@
-name: Build Test
+name: Build Dev
 
 on:
   push:
@@ -24,3 +24,9 @@ jobs:
 
       - name: Build
         run: ./gradlew build dist
+
+      - name: Upload Jar
+        uses: actions/upload-artifact@v4
+        with:
+#          name: "jadx-yuki-plugin-dev"
+          path: "build/dist"

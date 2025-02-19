@@ -1,12 +1,7 @@
+## JADX YukiHookAPI plugin
 
- ## JADX Example plugin
+为 Jadx 添加 YukiHookAPI 支持
 
-Simple example of jadx plugin.
-Adds a jadx watermark comment to every generated java class
+目前仅支持Kotlin
 
-Install using location id: `github:jadx-decompiler:jadx-example-plugin`
-
-In jadx-cli:
-```bash
-  jadx plugins --install "github:jadx-decompiler:jadx-example-plugin"
-```
+有想法可以进行PR
