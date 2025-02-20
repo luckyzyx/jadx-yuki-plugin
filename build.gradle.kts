@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
 	`java-library`
-	kotlin("jvm")
+	kotlin("jvm") version "2.1.10"
 
 	id("com.github.johnrengelman.shadow") version "8.1.1"
 
@@ -16,7 +16,7 @@ kotlin {
 }
 
 val isDev = false
-version = "1.0.0" + if (isDev) "-dev" else ""
+version = "1.0.1" + if (isDev) "-dev" else ""
 
 tasks {
 	val shadowJar = withType(ShadowJar::class) {

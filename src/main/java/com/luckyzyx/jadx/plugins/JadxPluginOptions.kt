@@ -2,7 +2,7 @@ package com.luckyzyx.jadx.plugins
 
 import jadx.api.plugins.options.impl.BasePluginOptionsBuilder
 
-class JadxPluginSettings : BasePluginOptionsBuilder() {
+class JadxPluginOptions : BasePluginOptionsBuilder() {
 
 	var isEnable: Boolean = false
 

@@ -8,7 +8,7 @@ import jadx.core.dex.instructions.args.PrimitiveType
 import jadx.core.utils.exceptions.JadxRuntimeException
 import java.util.function.Consumer
 
-class CodeGenerator(private val guiContext: JadxGuiContext, private val decompiler: JadxDecompiler) :
+class YukiCodeAction(private val guiContext: JadxGuiContext, private val decompiler: JadxDecompiler) :
 	Consumer<ICodeNodeRef?> {
 
 	override fun accept(iCodeNodeRef: ICodeNodeRef?) {
@@ -50,42 +50,61 @@ class CodeGenerator(private val guiContext: JadxGuiContext, private val decompil
 		val returnType = fixTypeContent(methodNode.returnType)
 
 		return if (methodNode.isConstructor) {
-			val code = """
-				"%s".toClass().apply {
-					constructor {
-						param(%s)
-					}.hook {
+			if (args.isEmpty()) {
+				"""
+					"%s".toClass().apply {
+						constructor {
+							emptyParam()
+						}.hook {
 
+						}
 					}
+				""".trimIndent().let {
+					String.format(it, rawClassName)
 				}
-		""".trimIndent()
-			String.format(code, rawClassName, args.joinToString(", "))
-		} else if (args.isEmpty()) {
-			val code = """
-				"%s".toClass().apply {
-					method {
-						name = "%s"
-						emptyParam()
-						returnType = %s
-					}.hook {
+			} else {
+				"""
+					"%s".toClass().apply {
+						constructor {
+							param(%s)
+						}.hook {
 
+						}
 					}
+				""".trimIndent().let {
+					String.format(it, rawClassName, args.joinToString(", "))
 				}
-		""".trimIndent()
-			String.format(code, rawClassName, methodName, returnType)
+			}
 		} else {
-			val code = """
-				"%s".toClass().apply {
-					method {
-						name = "%s"
-						param(%s)
-						returnType = %s
-					}.hook {
+			if (args.isEmpty()) {
+				"""
+					"%s".toClass().apply {
+						method {
+							name = "%s"
+							emptyParam()
+							returnType = %s
+						}.hook {
 
+						}
 					}
+				""".trimIndent().let {
+					String.format(it, rawClassName, methodName, returnType)
 				}
-		""".trimIndent()
-			String.format(code, rawClassName, methodName, args.joinToString(", "), returnType)
+			} else {
+				"""
+					"%s".toClass().apply {
+						method {
+							name = "%s"
+							param(%s)
+							returnType = %s
+						}.hook {
+
+						}
+					}
+				""".trimIndent().let {
+					String.format(it, rawClassName, methodName, args.joinToString(", "), returnType)
+				}
+			}
 		}
 	}
 
@@ -121,7 +140,7 @@ class CodeGenerator(private val guiContext: JadxGuiContext, private val decompil
 				PrimitiveType.LONG -> "LongType"
 				PrimitiveType.DOUBLE -> "DoubleType"
 				PrimitiveType.OBJECT -> "AnyClass"
-				PrimitiveType.ARRAY -> "AnyClass"
+				PrimitiveType.ARRAY -> "ArrayClass"
 				PrimitiveType.VOID -> "UnitType"
 				else -> throw JadxRuntimeException("Unknown or null primitive type: $type")
 			}

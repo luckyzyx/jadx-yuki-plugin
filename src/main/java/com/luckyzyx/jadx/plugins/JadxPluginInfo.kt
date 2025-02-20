@@ -9,7 +9,7 @@ import java.util.function.Function
 
 class JadxPluginInfo : JadxPlugin {
 
-	private val options = JadxPluginSettings()
+	private val options = JadxPluginOptions()
 
 	companion object {
 		const val PLUGIN_ID: String = "jadx-yuki-plugin"
@@ -23,7 +23,7 @@ class JadxPluginInfo : JadxPlugin {
 			.build()
 	}
 
-	private fun canGen(nodeRef: ICodeNodeRef?): Boolean {
+	private fun isEnable(nodeRef: ICodeNodeRef?): Boolean {
 		return true
 	}
 
@@ -33,10 +33,11 @@ class JadxPluginInfo : JadxPlugin {
 			val decompiler = context.decompiler
 			val guiContext = context.guiContext
 			if (guiContext != null) {
-				val codeGenerator = CodeGenerator(guiContext, decompiler)
+				val yukiCodeAction = YukiCodeAction(guiContext, decompiler)
 				guiContext.addPopupMenuAction(
 					"复制为 YukiHookAPI 片段",
-					Function { nodeRef: ICodeNodeRef? -> this.canGen(nodeRef) }, null, codeGenerator
+					Function { nodeRef: ICodeNodeRef? -> this.isEnable(nodeRef) },
+					null, yukiCodeAction
 				)
 			}
 		}
