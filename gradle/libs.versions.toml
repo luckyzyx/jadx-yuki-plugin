@@ -1,0 +1,10 @@
+[versions]
+
+
+[plugins]
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
+use-latest-versions = { id = "se.patrikerdes.use-latest-versions", version = "0.2.18" }
+ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.51.0" }
+
+[libraries]
+jadx-core = { module = "io.github.skylot:jadx-core", version = "1.5.1" }

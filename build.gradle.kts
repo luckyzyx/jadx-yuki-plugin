@@ -4,19 +4,18 @@ plugins {
 	`java-library`
 	kotlin("jvm") version "2.1.10"
 
-	id("com.github.johnrengelman.shadow") version "8.1.1"
+	alias(libs.plugins.shadow)
 
 	// auto update dependencies with 'useLatestVersions' task
-	id("se.patrikerdes.use-latest-versions") version "0.2.18"
-	id("com.github.ben-manes.versions") version "0.51.0"
+	alias(libs.plugins.use.latest.versions)
+	alias(libs.plugins.ben.manes.versions)
 }
 
 kotlin {
-	jvmToolchain(11)
+	jvmToolchain(17)
 }
 
-val isDev = false
-version = "1.0.1" + if (isDev) "-dev" else ""
+version = "1.0.1"
 
 tasks {
 	val shadowJar = withType(ShadowJar::class) {
@@ -32,17 +31,19 @@ tasks {
 		from(shadowJar)
 		into(layout.buildDirectory.dir("dist"))
 	}
+	register<Copy>("distDev") {
+		group = "jadx-yuki-plugin"
+		version = "$version-dev"
+		dependsOn(shadowJar)
+		dependsOn(withType(Jar::class))
+
+		from(shadowJar)
+		into(layout.buildDirectory.dir("distDev"))
+	}
 }
 
 dependencies {
-	val jadxVersion = "1.5.1"
-	val isJadxSnapshot = jadxVersion.endsWith("-SNAPSHOT")
-
-	// use compile only scope to exclude jadx-core and its dependencies from result jar
-	implementation("io.github.skylot:jadx-core:$jadxVersion") {
-		isChanging = isJadxSnapshot
-	}
-
+	implementation(libs.jadx.core)
 	implementation(kotlin("stdlib-jdk8"))
 }
 

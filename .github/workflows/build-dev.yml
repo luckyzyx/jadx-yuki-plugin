@@ -23,10 +23,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build
-        run: ./gradlew build dist
+        run: ./gradlew build distDev
 
       - name: Upload Jar
         uses: actions/upload-artifact@v4
         with:
 #          name: "jadx-yuki-plugin-dev"
-          path: "build/dist"
+          path: "build/distDev"
