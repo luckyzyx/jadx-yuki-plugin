@@ -14,7 +14,7 @@ out/
 *.hprof
 
 **/.DS_Store
-
+.kotlin
 bin/
 target/
 build/

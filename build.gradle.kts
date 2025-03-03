@@ -3,9 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
 	`java-library`
 	kotlin("jvm") version "2.1.10"
-
 	alias(libs.plugins.shadow)
-
 	// auto update dependencies with 'useLatestVersions' task
 	alias(libs.plugins.use.latest.versions)
 	alias(libs.plugins.ben.manes.versions)
@@ -43,6 +41,8 @@ tasks {
 }
 
 dependencies {
+	implementation(libs.yuki.reflection)
+
 	implementation(libs.jadx.core)
 	implementation(kotlin("stdlib-jdk8"))
 }
