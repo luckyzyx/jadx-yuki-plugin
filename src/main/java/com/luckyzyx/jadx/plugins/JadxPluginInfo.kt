@@ -5,7 +5,6 @@ import jadx.api.plugins.JadxPlugin
 import jadx.api.plugins.JadxPluginContext
 import jadx.api.plugins.JadxPluginInfo
 import jadx.api.plugins.JadxPluginInfoBuilder
-import java.util.function.Function
 
 class JadxPluginInfo : JadxPlugin {
 
@@ -29,17 +28,17 @@ class JadxPluginInfo : JadxPlugin {
 
 	override fun init(context: JadxPluginContext) {
 		context.registerOptions(options)
+
+		val guiContext = context.guiContext ?: return
+		val decompiler = context.decompiler ?: return
+
 		if (options.isEnable) {
-			val decompiler = context.decompiler
-			val guiContext = context.guiContext
-			if (guiContext != null) {
-				val yukiCodeAction = YukiCodeAction(guiContext, decompiler)
-				guiContext.addPopupMenuAction(
-					"复制为 YukiHookAPI 片段",
-					Function { nodeRef: ICodeNodeRef? -> this.isEnable(nodeRef) },
-					null, yukiCodeAction
-				)
-			}
+			val yukiCodeAction = YukiCodeAction(guiContext, decompiler, options)
+			guiContext.addPopupMenuAction(
+				"复制为 YukiHookAPI 片段",
+				{ nodeRef: ICodeNodeRef? -> this.isEnable(nodeRef) },
+				null, yukiCodeAction
+			)
 		}
 	}
 }

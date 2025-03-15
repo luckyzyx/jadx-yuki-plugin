@@ -1,7 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-	`java-library`
 	kotlin("jvm") version "2.1.10"
 	alias(libs.plugins.shadow)
 	// auto update dependencies with 'useLatestVersions' task
@@ -13,16 +12,21 @@ kotlin {
 	jvmToolchain(17)
 }
 
-version = "1.0.1"
+version = "1.0.2"
+
+dependencies {
+	compileOnly(libs.jadx.core)
+	implementation(libs.yuki.reflection)
+}
 
 tasks {
 	val shadowJar = withType(ShadowJar::class) {
-		archiveClassifier.set("") // remove '-all' suffix
+		archiveClassifier = ""
+		minimize()
 	}
 
-	// copy result jar into "build/dist" directory
 	register<Copy>("dist") {
-		group = "jadx-yuki-plugin"
+		group = "build"
 		dependsOn(shadowJar)
 		dependsOn(withType(Jar::class))
 
@@ -30,7 +34,7 @@ tasks {
 		into(layout.buildDirectory.dir("dist"))
 	}
 	register<Copy>("distDev") {
-		group = "jadx-yuki-plugin"
+		group = "build dev"
 		version = "$version-dev"
 		dependsOn(shadowJar)
 		dependsOn(withType(Jar::class))
@@ -40,22 +44,9 @@ tasks {
 	}
 }
 
-dependencies {
-	implementation(libs.yuki.reflection)
-
-	implementation(libs.jadx.core)
-	implementation(kotlin("stdlib-jdk8"))
-}
-
 repositories {
-	mavenCentral()
 	maven("https://jitpack.io")
 	maven("https://api.xposed.info")
-	maven("https://maven.aliyun.com/repository/public")
-	maven("https://maven.aliyun.com/repository/jcenter")
-	maven("https://maven.aliyun.com/repository/google")
-	maven("https://maven.aliyun.com/repository/gradle-plugin")
-	maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+	mavenCentral()
 	google()
 }
-

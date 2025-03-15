@@ -2,10 +2,10 @@
 
 
 [plugins]
-shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
+shadow = { id = "com.gradleup.shadow", version = "9.0.0-beta10" }
 use-latest-versions = { id = "se.patrikerdes.use-latest-versions", version = "0.2.18" }
 ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.51.0" }
 
 [libraries]
 jadx-core = { group = "io.github.skylot", name = "jadx-core", version = "1.5.1" }
-yuki-reflection = { module = "com.highcapable.yukireflection:api", version = "1.0.3" }
+yuki-reflection = { group = "com.highcapable.yukireflection", name = "api", version = "1.0.3" }
