@@ -212,10 +212,10 @@ class YukiCodeAction(
 				ZipInputStreamClass.name -> "ZipInputStreamClass"
 				ZipOutputStreamClass.name -> "ZipOutputStreamClass"
 
-				else -> type.`object`
+				else -> "\"${type.`object`}\""
 			}
 
-			else -> "$type"
+			else -> "\"$type\""
 		}
 	}
 }
