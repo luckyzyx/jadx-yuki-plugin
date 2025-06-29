@@ -1,9 +1,10 @@
 package com.luckyzyx.jadx.plugins
 
-import com.highcapable.yukireflection.type.java.*
+import com.highcapable.kavaref.extension.JVoid
 import jadx.api.*
 import jadx.api.metadata.ICodeNodeRef
 import jadx.api.plugins.gui.JadxGuiContext
+import jadx.core.dex.info.AccessInfo
 import jadx.core.dex.instructions.args.ArgType
 import jadx.core.dex.instructions.args.PrimitiveType
 import jadx.core.utils.exceptions.JadxRuntimeException
@@ -36,10 +37,11 @@ class YukiCodeAction(
 
 	private fun generateClassSnippet(node: JavaClass): String {
 		val clsName = node.name
+//		val clsNode = node.classNode
 		val rawClassName = node.rawName
 
 		return """
-			val %sClazz = "%s".toClass().apply {
+			val %sClazz = "%s".toClass().resolve().apply {
 
 			}
 		""".trimIndent().let {
@@ -51,171 +53,131 @@ class YukiCodeAction(
 		val rawClassName = node.declaringClass.rawName
 		val methodNode = node.methodNode
 		val methodName = methodNode.name
+		val modifiers = fixModifierContent(methodNode.accessFlags)
 		val args = methodNode.argTypes.map(::fixTypeContent)
 		val returnType = fixTypeContent(methodNode.returnType)
 
-		val addClass = options.addMethodClass
-		return if (methodNode.isConstructor) {
-			"""
-				${if (addClass) "\"%s\".toClass().apply {" else ""}
-					constructor {
-						${if (args.isEmpty()) "emptyParam()" else "param(%s)"}
-					}.hook {
+		val formats = arrayListOf<String>()
+		val sb = StringBuilder()
+		if (options.addMethodClass) sb.append("\"$rawClassName\".toClass().resolve().apply {\n")
 
-					}
-				${if (addClass) "}" else ""}
-			""".trimIndent().let {
-				val formats = ArrayList<String>().apply {
-					if (addClass) add(rawClassName)
-					if (args.isNotEmpty()) add(args.joinToString(", "))
-				}
-				String.format(it, *formats.toTypedArray())
-			}
+		if (options.addModifiers) formats.add(modifiers.joinToString(", "))
+		if (args.isNotEmpty()) formats.add(args.joinToString(", "))
+
+		if (methodNode.isConstructor) {
+			sb.append("firstConstructor {\n")
+			if (options.addModifiers) sb.append("modifiers(%s)\n")
+			if (args.isEmpty()) sb.append("emptyParameters()\n") else sb.append("parameters(%s)\n")
 		} else {
-			"""
-				${if (addClass) "\"%s\".toClass().apply {" else ""}
-					method {
-						name = "%s"
-						${if (args.isEmpty()) "emptyParam()" else "param(%s)"}
-						returnType = %s
-					}.hook {
-
-					}
-				${if (addClass) "}" else ""}
-			""".trimIndent().let {
-				val formats = ArrayList<String>().apply {
-					if (addClass) add(rawClassName)
-					add(methodName)
-					if (args.isNotEmpty()) add(args.joinToString(", "))
-					add(returnType)
-				}
-				String.format(it, *formats.toTypedArray())
-			}
+			sb.append("firstMethod {\n")
+			if (options.addModifiers) sb.append("modifiers(%s)\n")
+			sb.append("name = \"$methodName\"\n")
+			if (args.isEmpty()) sb.append("emptyParameters()\n") else sb.append("parameters(%s)\n")
+			sb.append("returnType = $returnType\n")
 		}
+		sb.append("}.hook {\n")
+		sb.append("\n")
+		sb.append("}\n")
+		if (options.addMethodClass) sb.append("}")
+
+		return String.format(sb.toString(), *formats.toTypedArray())
 	}
 
 	private fun generateFieldSnippet(node: JavaField): String {
 		val rawClassName = node.declaringClass.rawName
 		val fieldNode = node.fieldNode
 		val fieldName = fieldNode.name
-		val static = if (node.accessFlags.isStatic) "" else "this"
-		val type = fixTypeContent(node.fieldNode.type)
+		val modifiers = fixModifierContent(fieldNode.accessFlags)
+		val isStatic = fieldNode.isStatic
+		val type = fixTypeContent(fieldNode.type)
 
-		val addClass = options.addFieldClass
-		return """
-			${if (addClass) "\"%s\".toClass().apply {" else ""}
-				field {
-					name = "%s"
-					type = %s
-				}.get(%s)
-			${if (addClass) "}" else ""}
-		""".trimIndent().let {
-			val formats = ArrayList<String>().apply {
-				if (addClass) add(rawClassName)
-				add(fieldName)
-				add(type)
-				add(static)
-			}
-			String.format(it, *formats.toTypedArray())
-		}
+		val formats = arrayListOf<String>()
+		val sb = StringBuilder()
+		if (options.addMethodClass) sb.append("\"$rawClassName\".toClass().resolve().apply {\n")
+
+		if (options.addModifiers) formats.add(modifiers.joinToString(", "))
+		formats.add(if (isStatic) "get()" else "of(instance).get()")
+
+		sb.append("firstField {\n")
+		if (options.addModifiers) sb.append("modifiers(%s)\n")
+		sb.append("name = \"$fieldName\"\n")
+		sb.append("type = $type\n")
+		sb.append("}.%s\n")
+		if (options.addMethodClass) sb.append("}")
+
+		return String.format(sb.toString(), *formats.toTypedArray())
+	}
+
+	private fun fixModifierContent(info: AccessInfo): ArrayList<String> {
+		val list = arrayListOf<String>()
+		if (info.isPublic) list.add("Modifiers.PUBLIC")
+		if (info.isPrivate) list.add("Modifiers.PRIVATE")
+		if (info.isProtected) list.add("Modifiers.PROTECTED")
+		if (info.isStatic) list.add("Modifiers.STATIC")
+		if (info.isFinal) list.add("Modifiers.FINAL")
+		if (info.isSynchronized) list.add("Modifiers.SYNCHRONIZED")
+		if (info.isVolatile) list.add("Modifiers.VOLATILE")
+		if (info.isTransient) list.add("Modifiers.TRANSIENT")
+		if (info.isNative) list.add("Modifiers.NATIVE")
+		if (info.isInterface) list.add("Modifiers.INTERFACE")
+		if (info.isAbstract) list.add("Modifiers.ABSTRACT")
+//		if (info.isStrict) list.add("Modifier.STRICT")
+		return list
 	}
 
 	private fun fixTypeContent(type: ArgType): String {
 		return when {
 			type.isPrimitive -> when (type.primitiveType) {
-				PrimitiveType.BOOLEAN -> "BooleanType"
-				PrimitiveType.CHAR -> "CharType"
-				PrimitiveType.BYTE -> "ByteType"
-				PrimitiveType.SHORT -> "ShortType"
-				PrimitiveType.INT -> "IntType"
-				PrimitiveType.FLOAT -> "FloatType"
-				PrimitiveType.LONG -> "LongType"
-				PrimitiveType.DOUBLE -> "DoubleType"
+				PrimitiveType.BOOLEAN -> "Boolean::class"
 
-				PrimitiveType.OBJECT -> "AnyClass"
-				PrimitiveType.ARRAY -> "ArrayClass"
-				PrimitiveType.VOID -> "UnitType"
+				PrimitiveType.BYTE -> "Byte::class"
+				PrimitiveType.CHAR -> "Char::class"
+
+				PrimitiveType.INT -> "Int::class"
+				PrimitiveType.DOUBLE -> "Double::class"
+				PrimitiveType.LONG -> "Long::class"
+				PrimitiveType.FLOAT -> "Float::class"
+				PrimitiveType.SHORT -> "Short::class"
+
+				PrimitiveType.VOID -> "Void.TYPE"
 
 				else -> throw JadxRuntimeException("Unknown or null primitive type: $type")
 			}
 
-			type.isObject -> when (type.`object`) {
-				IntClass.name -> "IntClass"
-				IntArrayClass.name -> "IntArrayClass"
-				IntArrayType.name -> "IntArrayType"
-				DoubleClass.name -> "DoubleClass"
-				DoubleArrayClass.name -> "DoubleArrayClass"
-				DoubleArrayType.name -> "DoubleArrayType"
-				LongClass.name -> "LongClass"
-				LongArrayClass.name -> "LongArrayClass"
-				LongArrayType.name -> "LongArrayType"
-				FloatClass.name -> "FloatClass"
-				FloatArrayClass.name -> "FloatArrayClass"
-				FloatArrayType.name -> "FloatArrayType"
-				ShortClass.name -> "ShortClass"
-				ShortArrayClass.name -> "ShortArrayClass"
-				ShortArrayType.name -> "ShortArrayType"
-				ByteClass.name -> "ByteClass"
-				ByteArrayClass.name -> "ByteArrayClass"
-				ByteArrayType.name -> "ByteArrayType"
-				CharClass.name -> "CharClass"
-				CharArrayClass.name -> "CharArrayClass"
-				CharArrayType.name -> "CharArrayType"
-				BooleanClass.name -> "BooleanClass"
-				BooleanArrayClass.name -> "BooleanArrayClass"
-				BooleanArrayType.name -> "BooleanArrayType"
-				StringClass.name -> "StringClass"
-				StringArrayClass.name -> "StringArrayClass"
-				CharSequenceClass.name -> "CharSequenceClass"
-				CharSequenceArrayClass.name -> "CharSequenceArrayClass"
+			type.isArray -> when ("${type.arrayElement}") {
+				PrimitiveType.BOOLEAN.longName -> "BooleanArray::class"
 
-				UnitClass.name -> "UnitClass"
-				AnyClass.name -> "AnyClass"
-				AnyArrayClass.name -> "AnyArrayClass"
-				NumberClass.name -> "NumberClass"
-				NumberArrayClass.name -> "NumberArrayClass"
+				PrimitiveType.BYTE.longName -> "ByteArray::class"
+				PrimitiveType.CHAR.longName -> "CharArray::class"
 
-				ArrayClass.name -> "ArrayClass"
-				ListClass.name -> "ListClass"
-				ArrayListClass.name -> "ArrayListClass"
-				HashMapClass.name -> "HashMapClass"
-				HashSetClass.name -> "HashSetClass"
-				WeakHashMapClass.name -> "WeakHashMapClass"
-				WeakReferenceClass.name -> "WeakReferenceClass"
-				SerializableClass.name -> "SerializableClass"
-				EnumClass.name -> "EnumClass"
-				MapClass.name -> "MapClass"
-				Map_EntryClass.name -> "Map_EntryClass"
-				SetClass.name -> "SetClass"
-				ReferenceClass.name -> "ReferenceClass"
-				VectorClass.name -> "VectorClass"
+				PrimitiveType.INT.longName -> "IntArray::class"
+				PrimitiveType.DOUBLE.longName -> "DoubleArray::class"
+				PrimitiveType.LONG.longName -> "LongArray::class"
+				PrimitiveType.FLOAT.longName -> "FloatArray::class"
+				PrimitiveType.SHORT.longName -> "ShortArray::class"
 
-				FileClass.name -> "FileClass"
-				InputStreamClass.name -> "InputStreamClass"
-				OutputStreamClass.name -> "OutputStreamClass"
-				BufferedReaderClass.name -> "BufferedReaderClass"
+				Object::class.java.name -> "ArrayClass(Any::class)"
+				JVoid::class.java.name -> "ArrayClass(JVoid::class)"
 
-				DateClass.name -> "DateClass"
-				TimeZoneClass.name -> "TimeZoneClass"
-				SimpleDateFormatClass_Java.name -> "SimpleDateFormatClass_Java"
-
-				TimerClass.name -> "TimerClass"
-				TimerTaskClass.name -> "TimerTaskClass"
-				ThreadClass.name -> "ThreadClass"
-				ObserverClass.name -> "ObserverClass"
-
-				StringBuilderClass.name -> "StringBuilderClass"
-				StringBufferClass.name -> "StringBufferClass"
-
-				ZipFileClass.name -> "ZipFileClass"
-				ZipEntryClass.name -> "ZipEntryClass"
-				ZipInputStreamClass.name -> "ZipInputStreamClass"
-				ZipOutputStreamClass.name -> "ZipOutputStreamClass"
-
-				else -> "\"${type.`object`}\""
+				else -> "ArrayClass(${type.arrayElement}::class)"
 			}
 
-			else -> "\"$type\""
+			else -> when (type) {
+				PrimitiveType.BOOLEAN.boxType -> "JBoolean::class"
+
+				PrimitiveType.BYTE.boxType -> "JByte::class"
+				PrimitiveType.CHAR.boxType -> "JCharacter::class"
+
+				PrimitiveType.INT.boxType -> "JInteger::class"
+				PrimitiveType.DOUBLE.boxType -> "JDouble::class"
+				PrimitiveType.LONG.boxType -> "JLong::class"
+				PrimitiveType.FLOAT.boxType -> "JFloat::class"
+				PrimitiveType.SHORT.boxType -> "JShort::class"
+
+				PrimitiveType.VOID.boxType -> "JVoid::class"
+
+				else -> "\"$type\""
+			}
 		}
 	}
 }
