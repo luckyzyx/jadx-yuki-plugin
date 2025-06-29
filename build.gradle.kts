@@ -12,11 +12,12 @@ kotlin {
 	jvmToolchain(17)
 }
 
-version = "1.0.2"
+version = "1.0.3"
 
 dependencies {
 	compileOnly(libs.jadx.core)
-	implementation(libs.yuki.reflection)
+	implementation(libs.kavaref.core)
+	implementation(libs.kavaref.extension)
 }
 
 tasks {
