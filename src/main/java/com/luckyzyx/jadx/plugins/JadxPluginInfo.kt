@@ -1,5 +1,6 @@
 package com.luckyzyx.jadx.plugins
 
+import jadx.api.metadata.ICodeAnnotation
 import jadx.api.metadata.ICodeNodeRef
 import jadx.api.plugins.JadxPlugin
 import jadx.api.plugins.JadxPluginContext
@@ -23,7 +24,10 @@ class JadxPluginInfo : JadxPlugin {
 	}
 
 	private fun isEnable(nodeRef: ICodeNodeRef?): Boolean {
-		return true
+		return when (nodeRef?.annType) {
+			ICodeAnnotation.AnnType.CLASS, ICodeAnnotation.AnnType.METHOD, ICodeAnnotation.AnnType.FIELD -> true
+			else -> false
+		}
 	}
 
 	override fun init(context: JadxPluginContext) {
