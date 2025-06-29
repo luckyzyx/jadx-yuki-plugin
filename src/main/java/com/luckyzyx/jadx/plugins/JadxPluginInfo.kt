@@ -18,7 +18,7 @@ class JadxPluginInfo : JadxPlugin {
 	override fun getPluginInfo(): JadxPluginInfo {
 		return JadxPluginInfoBuilder.pluginId(PLUGIN_ID)
 			.name("Jadx YukiHookAPI Plugin")
-			.description("为 Jadx 添加 YukiHookAPI 支持")
+			.description("为 Jadx 添加 YukiHookAPI 支持 | Add YukiHookAPI support for Jadx")
 			.homepage("https://github.com/luckyzyx/jadx-yuki-plugin")
 			.build()
 	}
