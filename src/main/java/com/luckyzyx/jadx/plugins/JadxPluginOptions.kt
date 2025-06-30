@@ -8,6 +8,7 @@ class JadxPluginOptions : BasePluginOptionsBuilder() {
 	var addMethodClass: Boolean = true
 	var addFieldClass: Boolean = true
 	var addModifiers: Boolean = true
+	var addTypeLog: Boolean = false
 
 	override fun registerOptions() {
 		boolOption(JadxPluginInfo.PLUGIN_ID + ".enable")
@@ -29,5 +30,10 @@ class JadxPluginOptions : BasePluginOptionsBuilder() {
 			.description("复制Member时添加Modifiers | Add Modifiers when copying Member")
 			.defaultValue(true)
 			.setter { v: Boolean -> addModifiers = v }
+
+		boolOption(JadxPluginInfo.PLUGIN_ID + ".add.type.logs")
+			.description("复制Member时添加Type Logs | Add Type Logs when copying Member")
+			.defaultValue(false)
+			.setter { v: Boolean -> addTypeLog = v }
 	}
 }
