@@ -163,6 +163,7 @@ class YukiCodeAction(
 			}
 
 			type.isGeneric && type.isObject -> fixTypeContent(ArgType.`object`(type.`object`), false)
+			type.isGenericType && type.isObject -> "Any::class"
 
 			else -> when (type) {
 				ArgType.BOOLEAN -> "JBoolean::class"
