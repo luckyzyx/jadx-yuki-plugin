@@ -125,7 +125,7 @@ class YukiCodeAction(
 		return list
 	}
 
-	private fun fixTypeContent(type: ArgType): String {
+	private fun fixTypeContent(type: ArgType, log: Boolean = true): String {
 		return when {
 			type.isPrimitive -> when (type.primitiveType) {
 				PrimitiveType.BOOLEAN -> "Boolean::class"
@@ -159,25 +159,55 @@ class YukiCodeAction(
 				Object::class.java.name -> "ArrayClass(Any::class)"
 				JVoid::class.java.name -> "ArrayClass(JVoid::class)"
 
-				else -> "ArrayClass(${type.arrayElement}::class)"
+				else -> "ArrayClass(${fixTypeContent(type.arrayElement)})"
 			}
 
+			type.isGeneric && type.isObject -> fixTypeContent(ArgType.`object`(type.`object`), false)
+
 			else -> when (type) {
-				PrimitiveType.BOOLEAN.boxType -> "JBoolean::class"
+				ArgType.BOOLEAN -> "JBoolean::class"
 
-				PrimitiveType.BYTE.boxType -> "JByte::class"
-				PrimitiveType.CHAR.boxType -> "JCharacter::class"
+				ArgType.BYTE -> "JByte::class"
+				ArgType.CHAR -> "JCharacter::class"
 
-				PrimitiveType.INT.boxType -> "JInteger::class"
-				PrimitiveType.DOUBLE.boxType -> "JDouble::class"
-				PrimitiveType.LONG.boxType -> "JLong::class"
-				PrimitiveType.FLOAT.boxType -> "JFloat::class"
-				PrimitiveType.SHORT.boxType -> "JShort::class"
+				ArgType.INT -> "JInteger::class"
+				ArgType.DOUBLE -> "JDouble::class"
+				ArgType.LONG -> "JLong::class"
+				ArgType.FLOAT -> "JFloat::class"
+				ArgType.SHORT -> "JShort::class"
 
-				PrimitiveType.VOID.boxType -> "JVoid::class"
+				ArgType.VOID -> "JVoid::class"
+
+				ArgType.OBJECT -> "Any::class"
+				ArgType.CLASS -> "Class::class"
+				ArgType.STRING -> "String::class"
+				ArgType.ENUM -> "Enum::class"
+				ArgType.THROWABLE -> "Throwable::class"
+				ArgType.EXCEPTION -> "Exception::class"
 
 				else -> "\"$type\""
 			}
-		}
+		} + if (options.addTypeLog && log) "\n${getTyeLogs(type)}\n" else ""
+
+	}
+
+	fun getTyeLogs(type: ArgType): String {
+		return """
+			//-------------------------------
+			//$type
+			//isPrimitive: ${type.isPrimitive}
+			//primitiveType: ${type.primitiveType}
+			//isObject: ${type.isObject}
+			//Object: ${if (type.isObject) type.`object` else null}
+			//isArray: ${type.isArray}
+			//arrayElement: ${type.arrayElement}
+			//isGeneric: ${type.isGeneric}
+			//isGenericType: ${type.isGenericType}
+			//genericTypes: ${type.genericTypes}
+			//isWildcard: ${type.isWildcard}
+			//wildcardType: ${type.wildcardType}
+			//wildcardBound: ${type.wildcardBound}
+			//-------------------------------
+		""".trimIndent()
 	}
 }
