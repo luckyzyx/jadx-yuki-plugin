@@ -166,18 +166,18 @@ class YukiCodeAction(
 			type.isGenericType && type.isObject -> "Any::class"
 
 			else -> when (type) {
-				ArgType.BOOLEAN -> "JBoolean::class"
+				PrimitiveType.BOOLEAN.boxType -> "JBoolean::class"
 
-				ArgType.BYTE -> "JByte::class"
-				ArgType.CHAR -> "JCharacter::class"
+				PrimitiveType.BYTE.boxType -> "JByte::class"
+				PrimitiveType.CHAR.boxType -> "JCharacter::class"
 
-				ArgType.INT -> "JInteger::class"
-				ArgType.DOUBLE -> "JDouble::class"
-				ArgType.LONG -> "JLong::class"
-				ArgType.FLOAT -> "JFloat::class"
-				ArgType.SHORT -> "JShort::class"
+				PrimitiveType.INT.boxType -> "JInteger::class"
+				PrimitiveType.DOUBLE.boxType -> "JDouble::class"
+				PrimitiveType.LONG.boxType -> "JLong::class"
+				PrimitiveType.FLOAT.boxType -> "JFloat::class"
+				PrimitiveType.SHORT.boxType -> "JShort::class"
 
-				ArgType.VOID -> "JVoid::class"
+				PrimitiveType.VOID.boxType -> "JVoid::class"
 
 				ArgType.OBJECT -> "Any::class"
 				ArgType.CLASS -> "Class::class"
