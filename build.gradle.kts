@@ -12,7 +12,7 @@ kotlin {
 	jvmToolchain(17)
 }
 
-version = "1.0.4"
+version = "1.0.5"
 
 dependencies {
 	compileOnly(libs.jadx.core)
