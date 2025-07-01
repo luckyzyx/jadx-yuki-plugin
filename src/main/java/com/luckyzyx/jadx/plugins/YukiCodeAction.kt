@@ -1,6 +1,5 @@
 package com.luckyzyx.jadx.plugins
 
-import com.highcapable.kavaref.extension.JVoid
 import jadx.api.*
 import jadx.api.metadata.ICodeNodeRef
 import jadx.api.plugins.gui.JadxGuiContext
@@ -127,50 +126,43 @@ class YukiCodeAction(
 
 	private fun fixTypeContent(type: ArgType, log: Boolean = true): String {
 		return when {
-			type.isPrimitive -> when (type.primitiveType) {
-				PrimitiveType.BOOLEAN -> "Boolean::class"
+			type.isPrimitive -> when (type) {
+				ArgType.BOOLEAN -> "Boolean::class"
+				ArgType.BYTE -> "Byte::class"
+				ArgType.CHAR -> "Char::class"
+				ArgType.INT -> "Int::class"
+				ArgType.DOUBLE -> "Double::class"
+				ArgType.LONG -> "Long::class"
+				ArgType.FLOAT -> "Float::class"
+				ArgType.SHORT -> "Short::class"
 
-				PrimitiveType.BYTE -> "Byte::class"
-				PrimitiveType.CHAR -> "Char::class"
-
-				PrimitiveType.INT -> "Int::class"
-				PrimitiveType.DOUBLE -> "Double::class"
-				PrimitiveType.LONG -> "Long::class"
-				PrimitiveType.FLOAT -> "Float::class"
-				PrimitiveType.SHORT -> "Short::class"
-
-				PrimitiveType.VOID -> "Void.TYPE"
+				ArgType.VOID -> "Void.TYPE"
 
 				else -> throw JadxRuntimeException("Unknown or null primitive type: $type")
 			}
 
-			type.isArray -> when ("${type.arrayElement}") {
-				PrimitiveType.BOOLEAN.longName -> "BooleanArray::class"
+			type.isArray -> when (type.arrayElement) {
+				ArgType.BOOLEAN -> "BooleanArray::class"
+				ArgType.BYTE -> "ByteArray::class"
+				ArgType.CHAR -> "CharArray::class"
+				ArgType.INT -> "IntArray::class"
+				ArgType.DOUBLE -> "DoubleArray::class"
+				ArgType.LONG -> "LongArray::class"
+				ArgType.FLOAT -> "FloatArray::class"
+				ArgType.SHORT -> "ShortArray::class"
 
-				PrimitiveType.BYTE.longName -> "ByteArray::class"
-				PrimitiveType.CHAR.longName -> "CharArray::class"
-
-				PrimitiveType.INT.longName -> "IntArray::class"
-				PrimitiveType.DOUBLE.longName -> "DoubleArray::class"
-				PrimitiveType.LONG.longName -> "LongArray::class"
-				PrimitiveType.FLOAT.longName -> "FloatArray::class"
-				PrimitiveType.SHORT.longName -> "ShortArray::class"
-
-				Object::class.java.name -> "ArrayClass(Any::class)"
-				JVoid::class.java.name -> "ArrayClass(JVoid::class)"
-
-				else -> "ArrayClass(${fixTypeContent(type.arrayElement)})"
+				else -> "ArrayClass(${fixTypeContent(type.arrayElement, false)})"
 			}
 
+			//忽略列表成员泛型
 			type.isGeneric && type.isObject -> fixTypeContent(ArgType.`object`(type.`object`), false)
+			//T泛型擦除
 			type.isGenericType && type.isObject -> "Any::class"
 
 			else -> when (type) {
 				PrimitiveType.BOOLEAN.boxType -> "JBoolean::class"
-
 				PrimitiveType.BYTE.boxType -> "JByte::class"
 				PrimitiveType.CHAR.boxType -> "JCharacter::class"
-
 				PrimitiveType.INT.boxType -> "JInteger::class"
 				PrimitiveType.DOUBLE.boxType -> "JDouble::class"
 				PrimitiveType.LONG.boxType -> "JLong::class"
