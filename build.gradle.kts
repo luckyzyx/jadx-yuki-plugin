@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-	kotlin("jvm") version "2.1.10"
+	kotlin("jvm") version "2.2.0"
 	alias(libs.plugins.shadow)
 	// auto update dependencies with 'useLatestVersions' task
 	alias(libs.plugins.use.latest.versions)
@@ -48,6 +48,7 @@ tasks {
 repositories {
 	maven("https://jitpack.io")
 	maven("https://api.xposed.info")
+	maven("https://raw.githubusercontent.com/HighCapable/maven-repository/main/repository/releases")
 	mavenCentral()
 	google()
 }
