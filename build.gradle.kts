@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-	kotlin("jvm") version "2.2.0"
+	alias(libs.plugins.kotlin.jvm)
 	alias(libs.plugins.shadow)
 	// auto update dependencies with 'useLatestVersions' task
 	alias(libs.plugins.use.latest.versions)
