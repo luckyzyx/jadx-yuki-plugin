@@ -180,13 +180,12 @@ class YukiCodeAction(
 
 				else -> "\"$type\""
 			}
-		} + if (options.addTypeLog && log) "\n${getTyeLogs(type)}\n" else ""
-
+		} + if (options.addTypeLog && log) "\n/*${getTyeLogs(type)}*/\n" else ""
 	}
 
 	fun getTyeLogs(type: ArgType): String {
 		return """
-			//-------------------------------
+			-------------------------------
 			//$type
 			//isPrimitive: ${type.isPrimitive}
 			//primitiveType: ${type.primitiveType}
@@ -200,7 +199,7 @@ class YukiCodeAction(
 			//isWildcard: ${type.isWildcard}
 			//wildcardType: ${type.wildcardType}
 			//wildcardBound: ${type.wildcardBound}
-			//-------------------------------
+			-------------------------------
 		""".trimIndent()
 	}
 }
