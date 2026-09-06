@@ -6,7 +6,7 @@ Add YukiHookAPI support for Jadx
 
 目前仅支持Kotlin ,有想法可以进行PR
 
-urrently, only Kotlin is supported. If you have any ideas, you can perform PR
+Currently, only Kotlin is supported. If you have any ideas, you can perform PR
 
 ## API
 

@@ -16,6 +16,7 @@ class YukiCodeAction(
 ) : Consumer<ICodeNodeRef?> {
 
 	override fun accept(iCodeNodeRef: ICodeNodeRef?) {
+		if (!options.isEnable) return
 		val node = decompiler.getJavaNodeByRef(iCodeNodeRef)
 		val code = generateXposedSnippet(node)
 		guiContext.copyToClipboard(code)
@@ -35,17 +36,15 @@ class YukiCodeAction(
 	}
 
 	private fun generateClassSnippet(node: JavaClass): String {
-		val clsName = node.name
-//		val clsNode = node.classNode
+		// 内部类名称含 $，替换为 _ 保证生成的变量名合法
+		val clsName = node.name.replace('$', '_')
 		val rawClassName = node.rawName
 
 		return """
-			val %sClazz = "%s".toClass().resolve().apply {
+			val ${clsName}Clazz = "$rawClassName".toClass().resolve().apply {
 
 			}
-		""".trimIndent().let {
-			String.format(it, clsName, rawClassName)
-		}
+		""".trimIndent()
 	}
 
 	private fun generateMethodSnippet(node: JavaMethod): String {
@@ -56,30 +55,24 @@ class YukiCodeAction(
 		val args = methodNode.argTypes.map(::fixTypeContent)
 		val returnType = fixTypeContent(methodNode.returnType)
 
-		val formats = arrayListOf<String>()
-		val sb = StringBuilder()
-		if (options.addMethodClass) sb.append("\"$rawClassName\".toClass().resolve().apply {\n")
-
-		if (options.addModifiers) formats.add(modifiers.joinToString(", "))
-		if (args.isNotEmpty()) formats.add(args.joinToString(", "))
-
-		if (methodNode.isConstructor) {
-			sb.append("firstConstructor {\n")
-			if (options.addModifiers) sb.append("modifiers(%s)\n")
-			if (args.isEmpty()) sb.append("emptyParameters()\n") else sb.append("parameters(%s)\n")
-		} else {
-			sb.append("firstMethod {\n")
-			if (options.addModifiers) sb.append("modifiers(%s)\n")
-			sb.append("name = \"$methodName\"\n")
-			if (args.isEmpty()) sb.append("emptyParameters()\n") else sb.append("parameters(%s)\n")
-			sb.append("returnType = $returnType\n")
+		return buildString {
+			if (options.addMethodClass) append("\"$rawClassName\".toClass().resolve().apply {\n")
+			if (methodNode.isConstructor) {
+				append("firstConstructor {\n")
+				if (options.addModifiers) append("modifiers(${modifiers.joinToString(", ")})\n")
+				if (args.isEmpty()) append("emptyParameters()\n") else append("parameters(${args.joinToString(", ")})\n")
+			} else {
+				append("firstMethod {\n")
+				if (options.addModifiers) append("modifiers(${modifiers.joinToString(", ")})\n")
+				append("name = \"$methodName\"\n")
+				if (args.isEmpty()) append("emptyParameters()\n") else append("parameters(${args.joinToString(", ")})\n")
+				append("returnType = $returnType\n")
+			}
+			append("}.hook {\n")
+			append("\n")
+			append("}\n")
+			if (options.addMethodClass) append("}")
 		}
-		sb.append("}.hook {\n")
-		sb.append("\n")
-		sb.append("}\n")
-		if (options.addMethodClass) sb.append("}")
-
-		return String.format(sb.toString(), *formats.toTypedArray())
 	}
 
 	private fun generateFieldSnippet(node: JavaField): String {
@@ -90,24 +83,18 @@ class YukiCodeAction(
 		val isStatic = fieldNode.isStatic
 		val type = fixTypeContent(fieldNode.type)
 
-		val formats = arrayListOf<String>()
-		val sb = StringBuilder()
-		if (options.addMethodClass) sb.append("\"$rawClassName\".toClass().resolve().apply {\n")
-
-		if (options.addModifiers) formats.add(modifiers.joinToString(", "))
-		formats.add(if (isStatic) "get()" else "of(instance).get()")
-
-		sb.append("firstField {\n")
-		if (options.addModifiers) sb.append("modifiers(%s)\n")
-		sb.append("name = \"$fieldName\"\n")
-		sb.append("type = $type\n")
-		sb.append("}.%s\n")
-		if (options.addMethodClass) sb.append("}")
-
-		return String.format(sb.toString(), *formats.toTypedArray())
+		return buildString {
+			if (options.addFieldClass) append("\"$rawClassName\".toClass().resolve().apply {\n")
+			append("firstField {\n")
+			if (options.addModifiers) append("modifiers(${modifiers.joinToString(", ")})\n")
+			append("name = \"$fieldName\"\n")
+			append("type = $type\n")
+			append("}.${if (isStatic) "get()" else "of(instance).get()"}\n")
+			if (options.addFieldClass) append("}")
+		}
 	}
 
-	private fun fixModifierContent(info: AccessInfo): ArrayList<String> {
+	private fun fixModifierContent(info: AccessInfo): List<String> {
 		val list = arrayListOf<String>()
 		if (info.isPublic) list.add("Modifiers.PUBLIC")
 		if (info.isPrivate) list.add("Modifiers.PRIVATE")
@@ -183,7 +170,7 @@ class YukiCodeAction(
 		} + if (options.addTypeLog && log) "\n/*${getTyeLogs(type)}*/\n" else ""
 	}
 
-	fun getTyeLogs(type: ArgType): String {
+	private fun getTyeLogs(type: ArgType): String {
 		return """
 			-------------------------------
 			//$type
