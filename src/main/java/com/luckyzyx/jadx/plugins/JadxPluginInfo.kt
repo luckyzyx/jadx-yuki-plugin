@@ -39,13 +39,11 @@ class JadxPluginInfo : JadxPlugin {
 		val guiContext = context.guiContext ?: return
 		val decompiler = context.decompiler ?: return
 
-		if (options.isEnable) {
-			val yukiCodeAction = YukiCodeAction(guiContext, decompiler, options)
-			guiContext.addPopupMenuAction(
-				"复制为 YukiHookAPI 片段",
-				{ nodeRef: ICodeNodeRef? -> this.isEnable(nodeRef) },
-				null, yukiCodeAction
-			)
-		}
+		val yukiCodeAction = YukiCodeAction(guiContext, decompiler, options)
+		guiContext.addPopupMenuAction(
+			"复制为 YukiHookAPI 片段",
+			{ nodeRef: ICodeNodeRef? -> options.isEnable && this.isEnable(nodeRef) },
+			null, yukiCodeAction
+		)
 	}
 }
