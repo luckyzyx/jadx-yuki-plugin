@@ -8,15 +8,22 @@ plugins {
 	alias(libs.plugins.ben.manes.versions)
 }
 
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
 kotlin {
-	jvmToolchain(17)
+	jvmToolchain(21)
 }
 
 version = "1.0.6"
 
 dependencies {
 	compileOnly(libs.jadx.core)
+	implementation(platform(libs.kavaref.bom))
 	implementation(libs.kavaref.core)
+	implementation(libs.kavaref.jvm)
 	implementation(libs.kavaref.extension)
 }
 
@@ -24,9 +31,11 @@ tasks {
 	val shadowJar = withType(ShadowJar::class) {
 		archiveClassifier = ""
 		minimize()
+		duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	}
 
 	register<Copy>("dist") {
+		description = ""
 		group = "build"
 		dependsOn(shadowJar)
 		dependsOn(withType(Jar::class))
@@ -35,6 +44,7 @@ tasks {
 		into(layout.buildDirectory.dir("dist"))
 	}
 	register<Copy>("distDev") {
+		description = ""
 		group = "build dev"
 		version = "$version-dev"
 		dependsOn(shadowJar)

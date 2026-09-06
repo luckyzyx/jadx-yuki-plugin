@@ -1,13 +1,16 @@
 [versions]
-kotlin = "2.2.0"
+kotlin = "2.4.10"
+kavaref-bom = "1.1.0"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-shadow = { id = "com.gradleup.shadow", version = "9.0.0-beta10" }
-use-latest-versions = { id = "se.patrikerdes.use-latest-versions", version = "0.2.18" }
-ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.51.0" }
+shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
+use-latest-versions = { id = "se.patrikerdes.use-latest-versions", version = "0.2.19" }
+ben-manes-versions = { id = "io.github.ben-manes.versions", version = "0.61.0" }
 
 [libraries]
-jadx-core = { group = "io.github.skylot", name = "jadx-core", version = "1.5.1" }
-kavaref-core = { module = "com.highcapable.kavaref:kavaref-core", version = "1.0.2" }
-kavaref-extension = { module = "com.highcapable.kavaref:kavaref-extension", version = "1.0.2" }
+jadx-core = { group = "io.github.skylot", name = "jadx-core", version = "1.5.6" }
+kavaref-bom = { module = "com.highcapable.kavaref:kavaref-bom", version.ref = "kavaref-bom" }
+kavaref-core = { module = "com.highcapable.kavaref:kavaref-core" }
+kavaref-jvm = { module = "com.highcapable.kavaref:kavaref-jvm" }
+kavaref-extension = { module = "com.highcapable.kavaref:kavaref-extension" }
